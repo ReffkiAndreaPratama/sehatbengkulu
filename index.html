@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SehatBengkulu — Peta Fasilitas Kesehatan</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Leaflet MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       TOPBAR
+  ════════════════════════════════════════════════ -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+          <path d="M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">SehatBengkulu</span>
+        <span class="brand-sub">Peta Fasilitas Kesehatan</span>
+      </div>
+    </div>
+
+    <div class="topbar-search">
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          type="text"
+          id="searchInput"
+          class="search-input"
+          placeholder="Cari fasilitas kesehatan..."
+          autocomplete="off"
+        />
+        <button class="search-clear" id="searchClear" aria-label="Hapus pencarian">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="topbar-actions">
+      <button class="btn-location" id="btnLocate" title="Temukan lokasi saya">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+          <circle cx="12" cy="12" r="9" stroke-dasharray="4 2"/>
+        </svg>
+        <span>Lokasi Saya</span>
+      </button>
+      <button class="btn-emergency" id="btnEmergency" title="Mode darurat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <span>Darurat</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN LAYOUT
+  ════════════════════════════════════════════════ -->
+  <main class="app-layout">
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Category Filter -->
+      <section class="sidebar-section">
+        <h3 class="section-title">Kategori</h3>
+        <div class="category-grid">
+          <button class="cat-btn active" data-type="all">
+            <span class="cat-icon">🏥</span>
+            <span class="cat-label">Semua</span>
+          </button>
+          <button class="cat-btn" data-type="hospital">
+            <span class="cat-icon">🏨</span>
+            <span class="cat-label">Rumah Sakit</span>
+          </button>
+          <button class="cat-btn" data-type="puskesmas">
+            <span class="cat-icon">🏥</span>
+            <span class="cat-label">Puskesmas</span>
+          </button>
+          <button class="cat-btn" data-type="clinic">
+            <span class="cat-icon">🩺</span>
+            <span class="cat-label">Klinik</span>
+          </button>
+          <button class="cat-btn" data-type="pharmacy">
+            <span class="cat-icon">💊</span>
+            <span class="cat-label">Apotek</span>
+          </button>
+          <button class="cat-btn" data-type="dental">
+            <span class="cat-icon">🦷</span>
+            <span class="cat-label">Klinik Gigi</span>
+          </button>
+          <button class="cat-btn" data-type="optic">
+            <span class="cat-icon">👓</span>
+            <span class="cat-label">Optik</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Feature Filter -->
+      <section class="sidebar-section">
+        <h3 class="section-title">Filter Fasilitas</h3>
+        <div class="filter-list">
+          <label class="filter-item">
+            <input type="checkbox" class="filter-check" data-filter="emergency" />
+            <span class="filter-check-custom"></span>
+            <span class="filter-icon">🚨</span>
+            <span>IGD / Gawat Darurat</span>
+          </label>
+          <label class="filter-item">
+            <input type="checkbox" class="filter-check" data-filter="bpjs" />
+            <span class="filter-check-custom"></span>
+            <span class="filter-icon">🪪</span>
+            <span>Menerima BPJS</span>
+          </label>
+          <label class="filter-item">
+            <input type="checkbox" class="filter-check" data-filter="inpatient" />
+            <span class="filter-check-custom"></span>
+            <span class="filter-icon">🛏️</span>
+            <span>Rawat Inap</span>
+          </label>
+          <label class="filter-item">
+            <input type="checkbox" class="filter-check" data-filter="laboratory" />
+            <span class="filter-check-custom"></span>
+            <span class="filter-icon">🔬</span>
+            <span>Laboratorium</span>
+          </label>
+          <label class="filter-item">
+            <input type="checkbox" class="filter-check" data-filter="pharmacy" />
+            <span class="filter-check-custom"></span>
+            <span class="filter-icon">💊</span>
+            <span>Apotek / Farmasi</span>
+          </label>
+          <label class="filter-item">
+            <input type="checkbox" class="filter-check" data-filter="dental" />
+            <span class="filter-check-custom"></span>
+            <span class="filter-icon">🦷</span>
+            <span>Layanan Gigi</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="sidebar-section">
+        <h3 class="section-title">Statistik</h3>
+        <div class="stats-grid">
+          <div class="stat-card stat-all">
+            <span class="stat-num" id="statTotal">25</span>
+            <span class="stat-label">Total</span>
+          </div>
+          <div class="stat-card stat-hospital">
+            <span class="stat-num" id="statHospital">6</span>
+            <span class="stat-label">RS</span>
+          </div>
+          <div class="stat-card stat-puskesmas">
+            <span class="stat-num" id="statPuskesmas">8</span>
+            <span class="stat-label">Puskesmas</span>
+          </div>
+          <div class="stat-card stat-clinic">
+            <span class="stat-num" id="statClinic">3</span>
+            <span class="stat-label">Klinik</span>
+          </div>
+          <div class="stat-card stat-pharmacy">
+            <span class="stat-num" id="statPharmacy">4</span>
+            <span class="stat-label">Apotek</span>
+          </div>
+          <div class="stat-card stat-other">
+            <span class="stat-num" id="statOther">4</span>
+            <span class="stat-label">Lainnya</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Nearby List -->
+      <section class="sidebar-section" id="nearbySection" style="display:none;">
+        <div class="nearby-header">
+          <h3 class="section-title">Terdekat dari Lokasi Anda</h3>
+          <button class="btn-clear-location" id="btnClearLocation" title="Hapus lokasi">✕</button>
+        </div>
+        <div class="nearby-list" id="nearbyList">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- Results List -->
+      <section class="sidebar-section">
+        <div class="results-header">
+          <h3 class="section-title">Daftar Fasilitas</h3>
+          <span class="results-count" id="resultsCount">25 fasilitas</span>
+        </div>
+        <div class="facility-list" id="facilityList">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- ─── MAP ─── -->
+    <div class="map-container">
+      <div id="map"></div>
+
+      <!-- Map Controls Overlay -->
+      <div class="map-overlay-controls">
+        <button class="map-ctrl-btn" id="btnZoomIn" title="Zoom In">+</button>
+        <button class="map-ctrl-btn" id="btnZoomOut" title="Zoom Out">−</button>
+        <div class="map-ctrl-divider"></div>
+        <button class="map-ctrl-btn" id="btnResetView" title="Reset tampilan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Toggle Sidebar -->
+      <button class="btn-toggle-sidebar" id="btnToggleSidebar" title="Sembunyikan/tampilkan panel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18">
+          <path id="toggleIcon" d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════════════════════════
+       DETAIL PANEL (Slide-in)
+  ════════════════════════════════════════════════ -->
+  <div class="detail-overlay" id="detailOverlay"></div>
+  <div class="detail-panel" id="detailPanel">
+    <button class="detail-close" id="detailClose" aria-label="Tutup detail">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <div class="detail-content" id="detailContent">
+      <!-- Dynamically populated -->
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       EMERGENCY MODAL
+  ════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="emergencyOverlay"></div>
+  <div class="emergency-modal" id="emergencyModal">
+    <div class="emergency-header">
+      <div class="emergency-pulse">🚨</div>
+      <h2>Mode Darurat</h2>
+      <p>Fasilitas kesehatan dengan IGD terdekat</p>
+      <button class="modal-close" id="emergencyClose" aria-label="Tutup modal">✕</button>
+    </div>
+    <div class="emergency-list" id="emergencyList">
+      <!-- Dynamically populated -->
+    </div>
+    <div class="emergency-footer">
+      <p class="emergency-note">⚠️ Aktifkan lokasi untuk hasil lebih akurat</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       TOAST NOTIFICATION
+  ════════════════════════════════════════════════ -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
